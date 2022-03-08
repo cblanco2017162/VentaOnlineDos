@@ -4,8 +4,8 @@ function agregarCategoria(req, res){
     var parametros = req.body;
     var categoriaModelo = new Categoria;
 
-    if( parametros.descrpcion) {
-        categoriaModelo.nombre = parametros.nombre;
+    if( parametros.descripcion) {
+        categoriaModelo.descripcion = parametros.descripcion;
         categoriaModelo.idAdmin = req.user.sub;
 
                 categoriaModelo.save((err, categoriaGuardada) => {
@@ -22,10 +22,8 @@ function editarCategoria(req, res){
     var parametros = req.body;    
 
      Categoria.findOneAndUpdate({_id : idCategoria, idAdmin : req.user.sub}, parametros, {new : true}, (err, categoriaActalizada)=>{
-            if(err) return res.status(500)
-                .send({ mensaje: 'Error en la peticion' });
-            if(!categoriaActalizada) return res.status(500)
-                .send({ mensaje: 'No puede editar categorias creadas por otro admin'});
+            if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+            if(!categoriaActalizada) return res.status(500).send({ mensaje: 'No puede editar categorias creadas por otro admin'});
             
             return res.status(200).send({ categoria : categoriaActalizada })
         });
@@ -34,7 +32,7 @@ function editarCategoria(req, res){
 function eliminarCategoria(req, res){
     var idCategoria = req.params.idCategoria;
 
-     Empleado.findOneAndDelete({_id : idCategoria, idAdmin : req.user.sub}, (err, categoriaEliminada) => {
+     Categoria.findOneAndDelete({_id : idCategoria, idAdmin : req.user.sub}, (err, categoriaEliminada) => {
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion'});
         if(!categoriaEliminada) return res.status(404).send( { mensaje: 'No puede eliminar categorias creadas por otro admin'});
 

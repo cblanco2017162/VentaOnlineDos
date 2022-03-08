@@ -13,8 +13,7 @@ function agregarProducto(req, res){
         productoModelo.precio = parametros.precio;
         productoModelo.idCategoria = req.user.sub;
 
-                categoriaModelo.save({ idCategoria : usuario }).populate('idCategoria', 'nombre')
-                              .exec((err, productoGuardado) => {
+                productoModelo.save({ idCategoria : usuario } ,(err, productoGuardado) => {
                                 if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
                                  if(!productoGuardado) return res.status(404).send( { mensaje: "Error, no se agrego ninguna empresa"});
 
@@ -27,7 +26,7 @@ function editarProducto(req, res){
     var idProd = req.params.idProducto;
     var parametros = req.body;    
 
-     Productos.findOneAndUpdate({_id : idProd, idCategoria : req.user.sub}, parametros, {new : true}, (err, empleadoActualizado)=>{
+     Productos.findOneAndUpdate(idProd, parametros, {new : true}, (err, empleadoActualizado)=>{
             if(err) return res.status(500)
                 .send({ mensaje: 'Error en la peticion' });
             if(!empleadoActualizado) return res.status(500)
@@ -40,7 +39,7 @@ function editarProducto(req, res){
 function eliminarProductos(req, res){
     var idProd = req.params.idProducto;
 
-     Productos.findOneAndDelete({_id : idProd, idCategoria : req.user.sub}, (err, productoEliminado) => {
+     Productos.findOneAndDelete(idProd, (err, productoEliminado) => {
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion'});
         if(!productoEliminado) return res.status(404).send( { mensaje: 'No puede eliminar productos de otra categoria'});
 

@@ -103,38 +103,77 @@ function EditarUsuario(req, res) {
     var idUser = req.params.idUsuario;
     var parametros = req.body;    
 
-    Usuario.findByIdAndUpdate(idUser, req.user.sub, parametros, {new : true},
-        (err, usuarioActualizado)=>{
-            if(err) return res.status(500)
-                .send({ mensaje: 'Error en la peticion' });
-            if(!usuarioActualizado) return res.status(500)
-                .send({ mensaje: 'Error al editar el Usuario'});
+ Usuario.findOne({_id:idUser},(err,usuarioEncontrado)=>{
+            if(err) return res.status(500).send({mensaje: "Error, el usuario no existe. Verifique el ID"});
+            if(!usuarioEncontrado) return res.status(404).send({mensaje: "Error, el usuario no existe. Verifique el ID"})    
+   
+            if(usuarioEncontrado.rol == 'CLIENTE'){
+            Usuario.findByIdAndUpdate(idUser, parametros, {new : true},
+              (err, usuarioActualizado)=>{
+              if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+              if(!usuarioActualizado) return res.status(500).send({ mensaje: 'Error al editar el Usuario'});
             
-            return res.status(200).send({usuario : usuarioActualizado})
+             return res.status(200).send({usuario : usuarioActualizado})
         })
-}
-
-function EliminarUsuario(){
-    var idUser = req.params.idUsuario;
-    Usuario.findOne({_id: idUser}, (err, usuarioBuscado)=>{
-        if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-        if(!usuarioBuscado) return res.status(500).send({ mensaje: 'Error al eliminar el usuario'});
-    })
-    if(usuarioBuscado.rol == "ADMIN"){
+    }else{
         return res.status(500).send({ mensaje: "No puede editar los administradores" });
-    }
-
-    if(req.user.rol == "CLIENTE"){
-        if(usuarioBuscado._id == req.user.sub){
-            Usuario.findByIdAndDelete(req.user.sub,(err, usuarioEliminado)=>{
-                if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
-                if(!usuarioEliminado) return res.status(500).send({ mensaje: 'Error al eliminar el usuario'});
-
-                return res.status(200).send({ usuario: usuarioEliminado })
-            })
-        }
-    }
+      }
+    })
 }
+
+function EliminarUsuario(req, res){
+     var idUser = req.params.idUsuario;
+     Usuario.findOne({_id:idUser},(err,usuarioEncontrado)=>{
+        if(err) return res.status(500).send({mensaje: "Error, el usuario no existe. Verifique el ID"});
+        if(!usuarioEncontrado) return res.status(404).send({mensaje: "Error, el usuario no existe. Verifique el ID"})
+ 
+        if(usuarioEncontrado.rol == "CLIENTE"){
+         Usuario.findByIdAndDelete(idUser,(err,usuarioEliminado)=>{
+                   if(err) return res.status(500).send({mensaje: "Error, el usuario no existe"});
+                   if(!usuarioEliminado) return res.status(404).send({mensaje: "Error, el usuario no existe"})
+           
+                   return  res.status(200).send({usuario:usuarioEliminado});
+               })
+     }else{
+          return res.status(500).send({ mensaje: 'No puede eliminar administradores'});
+     }
+    })
+}
+
+function EliminarUsuarios(req, res){
+    var idUser = req.params.idUsuario
+    Usuario.findOne({_id:idUser},(err,usuarioEncontrado)=>{
+       if(err) return res.status(500).send({mensaje: "Error, el usuario no existe. Verifique el ID"});
+       if(!usuarioEncontrado) return res.status(404).send({mensaje: "Error, el usuario no existe. Verifique el ID"})
+
+       if(usuarioEncontrado.rol=="ADMIN"){
+           return res.status(500).send({ mensaje: 'No pueden eliminar administradores'});
+       }
+       
+       if(req.user.rol=="CLIENTE"){
+           if(usuarioEncontrado._id == req.user.sub){
+               Usuario.findByIdAndDelete(req.user.sub,(err,usuarioEliminado)=>{
+                   if(err) return res.status(500).send({mensaje: "Error, el usuario no existe"});
+                   if(!usuarioEliminado) return res.status(404).send({mensaje: "Error, el usuario no existe"})
+           
+                   return  res.status(200).send({usuario:usuarioEliminado});
+               })
+           }else{
+               return res.status(500).send({ mensaje: 'No puede eliminar otros clientes'});
+           }
+        }else{
+           Usuario.findByIdAndDelete(req.user.sub,(err,usuarioEliminado)=>{
+               if(err) return res.status(500).send({mensaje: "Error, el usuario no existe"});
+               if(!usuarioEliminado) return res.status(404).send({mensaje: "Error, el usuario no existe"})
+       
+               return  res.status(200).send({usuario:usuarioEliminado});
+           })
+        }
+    })
+}
+
+
+
 
 
 module.exports = {
