@@ -12,4 +12,5 @@ app.use(express.json());
 app.use(cors());
 
 app.use('/api', UsuarioRutas, CategoriaRutas, ProductosRutas);
+
 module.exports = app;

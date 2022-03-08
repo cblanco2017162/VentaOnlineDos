@@ -3,6 +3,7 @@ const Carrito = require('../models/carrito.model');
 const Producto = require('../models/productos.model');
 const bcrypt = require('bcrypt-nodejs');
 const jwt = require('../services/jwt');
+const usuariosModel = require('../models/usuarios.model');
 
 function RegistrarAdmin(req, res) {
     var usuarioModel = new Usuario();
@@ -113,10 +114,33 @@ function EditarUsuario(req, res) {
         })
 }
 
+function EliminarUsuario(){
+    var idUser = req.params.idUsuario;
+    Usuario.findOne({_id: idUser}, (err, usuarioBuscado)=>{
+        if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+        if(!usuarioBuscado) return res.status(500).send({ mensaje: 'Error al eliminar el usuario'});
+    })
+    if(usuarioBuscado.rol == "ADMIN"){
+        return res.status(500).send({ mensaje: "No puede editar los administradores" });
+    }
+
+    if(req.user.rol == "CLIENTE"){
+        if(usuarioBuscado._id == req.user.sub){
+            Usuario.findByIdAndDelete(req.user.sub,(err, usuarioEliminado)=>{
+                if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+                if(!usuarioEliminado) return res.status(500).send({ mensaje: 'Error al eliminar el usuario'});
+
+                return res.status(200).send({ usuario: usuarioEliminado })
+            })
+        }
+    }
+}
+
 
 module.exports = {
     RegistrarAdmin,
     RegistrarCliente,
     Login,
-    EditarUsuario
+    EditarUsuario, 
+    EliminarUsuario
 }

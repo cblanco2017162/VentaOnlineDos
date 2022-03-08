@@ -3,6 +3,7 @@ const Productos = require('../models/productos.model');
 function agregarProducto(req, res){
     var parametros = req.body;
     var productoModelo = new Productos;
+    var usuario = req.user.sub;
 
     if( parametros.nombre && parametros.cantidad && parametros.vendido &&
         parametros.precio) {
@@ -12,13 +13,14 @@ function agregarProducto(req, res){
         productoModelo.precio = parametros.precio;
         productoModelo.idCategoria = req.user.sub;
 
-                categoriaModelo.save((err, productoGuardado) => {
-                      if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                      if(!productoGuardado) return res.status(404).send( { mensaje: "Error, no se agrego ninguna empresa"});
+                categoriaModelo.save({ idCategoria : usuario }).populate('idCategoria', 'nombre')
+                              .exec((err, productoGuardado) => {
+                                if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
+                                 if(!productoGuardado) return res.status(404).send( { mensaje: "Error, no se agrego ninguna empresa"});
 
-                return res.status(200).send({ producto: productoGuardado });
-       })
-   }
+                               return res.status(200).send({ producto: productoGuardado });
+                                })
+                          }
 }
 
 function editarProducto(req, res){
