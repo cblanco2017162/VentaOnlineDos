@@ -11,7 +11,7 @@ function agregarProducto(req, res){
         productoModelo.cantidad = parametros.cantidad;
         productoModelo.vendido = parametros.vendido;
         productoModelo.precio = parametros.precio;
-        productoModelo.idCategoria = req.user.sub;
+        productoModelo.idCategoria = parametros.idCategoria;
 
                 productoModelo.save({ idCategoria : usuario } ,(err, productoGuardado) => {
                                 if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
