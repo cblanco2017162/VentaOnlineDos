@@ -26,13 +26,13 @@ function editarProducto(req, res){
     var idProd = req.params.idProducto;
     var parametros = req.body;    
 
-     Productos.findOneAndUpdate(idProd, parametros, {new : true}, (err, empleadoActualizado)=>{
+     Productos.findOneAndUpdate(idProd, parametros, {new : true}, (err, productoActualizado)=>{
             if(err) return res.status(500)
                 .send({ mensaje: 'Error en la peticion' });
-            if(!empleadoActualizado) return res.status(500)
+            if(!productoActualizado) return res.status(500)
                 .send({ mensaje: 'No puede editar productos de otra categoria'});
             
-            return res.status(200).send({ empleado : empleadoActualizado })
+            return res.status(200).send({ Producto : productoActualizado })
         });
 }
 
@@ -43,12 +43,12 @@ function eliminarProductos(req, res){
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion'});
         if(!productoEliminado) return res.status(404).send( { mensaje: 'No puede eliminar productos de otra categoria'});
 
-        return res.status(200).send({ producto: productoEliminado});
+        return res.status(200).send({ Eliminado: productoEliminado});
     })
 }
 
 function obtenerProductos(req, res){
-    Productos.find({idCategoria : req.user.sub}, (err, productosEncontrados) => {
+    Productos.find((err, productosEncontrados) => {
         if (err) return res.send({ mensaje: "Error: " + err })
 
         for (let i = 0; i < productosEncontrados.length; i++) {
@@ -62,12 +62,37 @@ function obtenerProductos(req, res){
 function obtenerProductoNombre(req, res){
     var nombreProd = req.params.nombreProducto;
 
-    Empleado.findOne( { nombre : { $regex: nombreProd, $options: 'i' }, idCategoria : req.user.sub }, (err, productoEncontrado) => {
+    Productos.findOne( { nombre : { $regex: nombreProd, $options: 'i' }}, (err, productoEncontrado) => {
         if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
-        if(!productoEncontrado) return res.status(404).send({ mensaje: "Error, ese producto no existe o no perteneces a esa categoria" });
+        if(!productoEncontrado) return res.status(404).send({ mensaje: "Error, ese producto no existe" });
 
         return res.status(200).send({ producto: productoEncontrado });
     })
+}
+
+function Stock(req, res){
+    const idProd = req.params.idProducto;
+    const parametros = req.body;
+    
+    Productos.findOne({_id: idProd}, (err, productoEncontrado)=>{
+        if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        if(!productoEncontrado) return res.status(404).send({ mensaje: "Error, ese producto no existe" });
+    
+    if(parametros.cantidad >= productoEncontrado.cantidad){
+    Productos.findByIdAndUpdate(idProd, {$inc : {cantidad: parametros.cantidad}}, {new: true},(err, productoModificado)=>{
+        if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        if(!productoModificado) return res.status(404).send({ mensaje: "Error al editar el producto" });
+
+        return res.status(200).send({ producto: productoModificado });
+    })
+   }else{
+    return res.status(500).send({ mensaje: "La cantidad restada es mayor a la existencia del producto" });
+   }
+ })
+}
+
+function productoMasVendido(req, res){
+
 }
 
 module.exports = {
@@ -75,5 +100,6 @@ module.exports = {
     editarProducto,
     eliminarProductos,
     obtenerProductos,
-    obtenerProductoNombre
+    obtenerProductoNombre,
+    Stock
 }
