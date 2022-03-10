@@ -9,9 +9,9 @@ api.post('/agregarProducto', [md_autenticacion.Auth, md_roles.varAdmin], control
 api.put('/editarProducto/:idProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.editarProducto);
 api.delete('/eliminarProducto/:idProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.eliminarProductos);
 api.get('/buscarProductos', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.obtenerProductos);
-api.get('/buscarPorNombre/:nombreProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.obtenerProductoNombre)
-api.put('/stock/:idProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.Stock);
+api.get('/buscarPorNombre/:nombreProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.obtenerProductoNombre);
 api.post('/agregarCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.agregarCarrito);
-api.put('/carrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.Carritos);
+api.put('/llenarCarrito/:idCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.llenarCarrito);
+api.put('/generarFactura/:idCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.generarFactura);
 
 module.exports = api;
