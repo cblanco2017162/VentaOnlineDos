@@ -11,5 +11,7 @@ api.delete('/eliminarProducto/:idProducto', [md_autenticacion.Auth, md_roles.var
 api.get('/buscarProductos', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.obtenerProductos);
 api.get('/buscarPorNombre/:nombreProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.obtenerProductoNombre)
 api.put('/stock/:idProducto', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.Stock);
+api.post('/agregarCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.agregarCarrito);
+api.put('/carrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.Carritos);
 
 module.exports = api;

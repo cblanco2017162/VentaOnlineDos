@@ -1,5 +1,4 @@
 const Usuario = require('../models/usuarios.model');
-const Carrito = require('../models/carrito.model');
 const Producto = require('../models/productos.model');
 const bcrypt = require('bcrypt-nodejs');
 const jwt = require('../services/jwt');
@@ -139,41 +138,6 @@ function EliminarUsuario(req, res){
      }
     })
 }
-
-function EliminarUsuarios(req, res){
-    var idUser = req.params.idUsuario
-    Usuario.findOne({_id:idUser},(err,usuarioEncontrado)=>{
-       if(err) return res.status(500).send({mensaje: "Error, el usuario no existe. Verifique el ID"});
-       if(!usuarioEncontrado) return res.status(404).send({mensaje: "Error, el usuario no existe. Verifique el ID"})
-
-       if(usuarioEncontrado.rol=="ADMIN"){
-           return res.status(500).send({ mensaje: 'No pueden eliminar administradores'});
-       }
-       
-       if(req.user.rol=="CLIENTE"){
-           if(usuarioEncontrado._id == req.user.sub){
-               Usuario.findByIdAndDelete(req.user.sub,(err,usuarioEliminado)=>{
-                   if(err) return res.status(500).send({mensaje: "Error, el usuario no existe"});
-                   if(!usuarioEliminado) return res.status(404).send({mensaje: "Error, el usuario no existe"})
-           
-                   return  res.status(200).send({usuario:usuarioEliminado});
-               })
-           }else{
-               return res.status(500).send({ mensaje: 'No puede eliminar otros clientes'});
-           }
-        }else{
-           Usuario.findByIdAndDelete(req.user.sub,(err,usuarioEliminado)=>{
-               if(err) return res.status(500).send({mensaje: "Error, el usuario no existe"});
-               if(!usuarioEliminado) return res.status(404).send({mensaje: "Error, el usuario no existe"})
-       
-               return  res.status(200).send({usuario:usuarioEliminado});
-           })
-        }
-    })
-}
-
-
-
 
 
 module.exports = {
