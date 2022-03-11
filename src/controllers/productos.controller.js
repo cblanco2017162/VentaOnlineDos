@@ -164,7 +164,6 @@ function generarFactura(req, res){
     var parametros = req.body;
     
     Carrito.findById(idCarrito, (err, carritoEncontrado)=>{
-        facturaModel.nit = parametros.nit;
         facturaModel.listaComprado = carritoEncontrado.carrito;
         facturaModel.idUsuario = req.user.sub;
         facturaModel.totalFactura = carritoEncontrado.totalCarrito;
@@ -185,9 +184,10 @@ function generarFactura(req, res){
             if(!facturaGuardada) return res.status(404).send({ mensaje: "Error al guardar la factura" });
             
            // return res.status(200).send({Factura: facturaGuardada});
-           Factura.find({idUsuario: req.user.sub},(err, facturaEncontrada) => {
-            if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+           //Factura.find({idUsuario: req.user.sub},(err, facturaEncontrada) => {
+           // if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
     
+           //console.log(facturaGuardada)
             const fs = require('fs');
             const Pdfmake = require('pdfmake');
     
@@ -203,10 +203,10 @@ function generarFactura(req, res){
             let pdfmake = new Pdfmake(fonts);
     
             let content = [{
-            text:  'Productos:',fontSize: 24, color: 'blue', italics: true, alignment : 'center',
+            text:  'Factura',fontSize: 24, color: 'blue', italics: true, alignment : 'center',
             }]
     
-            for (let i = 0; i < facturaEncontrada.length ; i++) {
+            for (let i = 0; i < facturaGuardada.listaComprado.length ; i++) {
     
                 let array = i + 1;
     
@@ -215,17 +215,17 @@ function generarFactura(req, res){
                 })
     
                 content.push({
-                    text:'Producto :'+' '+facturaEncontrada[i].nombreProducto+' - '+facturaEncontrada[i].precioUnitario +' - '+facturaEncontrada[i].cantidadComprada, color : 'gray',
+                    text:'Producto :'+' '+facturaGuardada.listaComprado[i].nombreProducto+' - '+'precio:'+facturaGuardada.listaComprado[i].precioUnitario +' - '+'Comprado:'+facturaGuardada.listaComprado[i].cantidadComprada, color : 'gray',
                 })
 
-                content.push({
-                    text:'Total:'+' ' + facturaEncontrada.totalFactura, color: 'gray'
-                })
     
                 content.push({
                     text:' ',
                 })
             }
+            content.push({
+                text:'Total gastado:'+' ' + facturaGuardada.totalFactura, color: 'gray'
+            })
     
             let docDefinition = {
                 content: content
@@ -237,7 +237,7 @@ function generarFactura(req, res){
             return res.status(200).send({mensaje: 'pdf Creado y factura guardada'});
     
         })
-        })
+        //})
     })
 }
 

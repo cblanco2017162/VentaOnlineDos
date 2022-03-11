@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const FacturaSchema = Schema({
-    nit: String,
     idUsuario: { type: Schema.Types.ObjectId, ref: 'Usuarios' },
     listaComprado: [{
         nombreProducto: String,
