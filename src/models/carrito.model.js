@@ -5,10 +5,10 @@ const CarritosSchema = Schema({
     carrito: [{
         nombreProducto: String,
         cantidadComprada: Number,
-        precioUnitario: Number
+        precioUnitario: Number,
+        subTotal : Number,
     }],
     totalCarrito: Number,
-    subTotal : Number,
     idCliente: { type: Schema.Types.ObjectId, ref: 'Usuarios' }
 });
 

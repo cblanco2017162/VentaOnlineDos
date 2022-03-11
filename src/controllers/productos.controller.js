@@ -122,20 +122,21 @@ function llenarCarrito(req, res){
         if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
         if(!productoEncontrado) return res.status(404).send({ mensaje: "Error al encontrar el producto" });
         
-      if(parametros.cantidadComprada > productoEncontrado.cantidad){  
+      //console.log(productoEncontrado.cantidad);
+      //console.log(parametros.cantidadComprada);
+      if(parametros.cantidadComprada <= productoEncontrado.cantidad){  
       Carrito.findByIdAndUpdate({_id: idCarrito, idCliente: req.user.sub}, { $push: { carrito: { nombreProducto: parametros.nombreProducto,
-        cantidadComprada: parametros.cantidad, precioUnitario: productoEncontrado.precio}}},{new: true},
+        cantidadComprada: parametros.cantidadComprada, precioUnitario: productoEncontrado.precio, subTotal: (parametros.cantidadComprada * productoEncontrado.precio)}}},{new: true},
         (err, carritoActualizado)=>{
+            
             if(err) return res.status(500).send({ mensaje: "Error en la peticion del cliente" });
             if(!carritoActualizado) return res.status(404).send({ mensaje: "Error al actualizar el carrito" });
 
             let totalLocal = 0;
-            let subTotalLocal = 0;
             for(let i =0; i < carritoActualizado.carrito.length; i++){
-                subTotalLocal = totalLocal + carritoActualizado.carrito[i].precioUnitario * carritoActualizado.carrito[i].cantidadComprada;
-                totalLocal += totalLocal + subTotalLocal;
+                totalLocal += carritoActualizado.carrito[i].subTotal;
             }
-            Carrito.findByIdAndUpdate({_id: idCarrito, idCliente: req.user.sub}, {totalCarrito: totalLocal, subTotal: subTotalLocal}, {new: true},(err, totalAgregado)=>{
+            Carrito.findByIdAndUpdate({_id: idCarrito, idCliente: req.user.sub}, {totalCarrito: totalLocal}, {new: true},(err, totalAgregado)=>{
                 if(err) return res.status(500).send({ mensaje: "Error en la peticion del total" });
                 if(!totalAgregado) return res.status(404).send({ mensaje: "Error al actualizar el total del carrito" }); 
            
@@ -162,40 +163,32 @@ function eliminarCarrito(req, res){
 
 function generarFactura(req, res){
     const facturaModel = new Factura();
-    const idCarrito = req.parans.idCarrito
+    const idCarrito = req.params.idCarrito
     var parametros = req.body;
     
     Carrito.findById(idCarrito, (err, carritoEncontrado)=>{
-        facturaModel.listaComprado = carritoEncontrado.carrito;
         facturaModel.nit = parametros.nit;
+        facturaModel.listaComprado = carritoEncontrado.carrito;
         facturaModel.idUsuario = req.user.sub;
         facturaModel.totalFactura = carritoEncontrado.totalCarrito;
 
-        for(let i = 0; i < carritoEncontrado.carrito.length; i++){
-            Carrito.findOne((err, carritoBuscado)=>{
-                if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                if(!carritoBuscado) return res.status(404).send({ mensaje: "Error, ese carrito no existe" });
-            
-            if(parametros.cantidad < carritoBuscado.cantidadComprada){
-            Productos.findOneAndUpdate({nombre: carritoEncontrado.carrito[i].nombreProducto}, {$inc : {cantidad: carritoEncontrado.cantidad[i].cantidadComprada*-1}}
-                ,{new: true},(err, productoModificado)=>{
-                if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                if(!productoModificado) return res.status(404).send({ mensaje: "Error al editar el producto" });
-        
-                return res.status(200).send({ producto: productoModificado });
-            })
-           }else{
-            return res.status(500).send({ mensaje: "La cantidad restada es mayor a la existencia del producto" });
-           }
-         })
+        for(let i=0; i<carritoEncontrado.carrito.length; i++){
+            Productos.findOneAndUpdate({nombre: carritoEncontrado.carrito[i].nombreProducto}, 
+                {$inc:{cantidad: carritoEncontrado.carrito[i].cantidadComprada *-1, vendido: carritoEncontrado.carrito[i].cantidadComprada }})
         }
     })
 
-    Carrito.findByIdAndUpdate({_id: idCarrito}, {$set:{carrito: [] }, totalCarrito:0},{new : true}, (err, carritoVacio)=>{
+    let limpiarCarrito = []   
+    Carrito.findByIdAndUpdate({_id: idCarrito}, {carrito: limpiarCarrito, totalCarrito:0},{new : true}, (err, carritoVacio)=>{
         if(err) return res.status(500).send({ mensaje: "Error en la peticion del cliente" });
-        if(!carritoActualizado) return res.status(404).send({ mensaje: "Error al vaciar el carrito" });
+        if(!carritoVacio) return res.status(404).send({ mensaje: "Error al vaciar el carrito" });
 
-        return res.status(200).send({Carrito: carritoVacio});
+        facturaModel.save((err, facturaGuardada)=>{
+            if(err) return res.status(500).send({ mensaje: "Error en la peticion de la factura" });
+            if(!facturaGuardada) return res.status(404).send({ mensaje: "Error al guardar la factura" });
+            
+            return res.status(200).send({Factura: facturaGuardada});
+        })
     })
 }
 
