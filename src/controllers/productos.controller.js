@@ -93,9 +93,6 @@ function obtenerProductoNombre(req, res){
  })
 }*/
 
-function productoMasVendido(req, res){
-
-}
 
 function agregarCarrito(req, res){
     var carritoModelo = new Carrito;
@@ -177,9 +174,9 @@ function generarFactura(req, res){
                 {$inc:{cantidad: carritoEncontrado.carrito[i].cantidadComprada *-1, vendido: carritoEncontrado.carrito[i].cantidadComprada }})
         }
     })
-
-    let limpiarCarrito = []   
-    Carrito.findByIdAndUpdate({_id: idCarrito}, {carrito: limpiarCarrito, totalCarrito:0},{new : true}, (err, carritoVacio)=>{
+    
+        let limpiarCarrito = []   
+    Carrito.findByIdAndUpdate({_id: idCarrito, idUsuario: req.user.sub}, {carrito: limpiarCarrito, totalCarrito:0},{new : true}, (err, carritoVacio)=>{
         if(err) return res.status(500).send({ mensaje: "Error en la peticion del cliente" });
         if(!carritoVacio) return res.status(404).send({ mensaje: "Error al vaciar el carrito" });
 
@@ -187,17 +184,89 @@ function generarFactura(req, res){
             if(err) return res.status(500).send({ mensaje: "Error en la peticion de la factura" });
             if(!facturaGuardada) return res.status(404).send({ mensaje: "Error al guardar la factura" });
             
-            return res.status(200).send({Factura: facturaGuardada});
+           // return res.status(200).send({Factura: facturaGuardada});
+           Factura.find({idUsuario: req.user.sub},(err, facturaEncontrada) => {
+            if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
+    
+            const fs = require('fs');
+            const Pdfmake = require('pdfmake');
+    
+            var fonts = {
+                Roboto: {
+                    normal: './fonts/Roboto-Regular.ttf',
+                    bold: './fonts/Roboto-Medium.ttf',
+                    italics: './fonts/Roboto-Italic.ttf',
+                    bolditalics: './fonts/Roboto-MediumItalic.ttf'
+                }
+            };
+    
+            let pdfmake = new Pdfmake(fonts);
+    
+            let content = [{
+            text:  'Productos:',fontSize: 24, color: 'blue', italics: true, alignment : 'center',
+            }]
+    
+            for (let i = 0; i < facturaEncontrada.length ; i++) {
+    
+                let array = i + 1;
+    
+                content.push({
+                    text:'Producto No:'+array,
+                })
+    
+                content.push({
+                    text:'Producto :'+' '+facturaEncontrada[i].nombreProducto+' - '+facturaEncontrada[i].precioUnitario +' - '+facturaEncontrada[i].cantidadComprada, color : 'gray',
+                })
+
+                content.push({
+                    text:'Total:'+' ' + facturaEncontrada.totalFactura, color: 'gray'
+                })
+    
+                content.push({
+                    text:' ',
+                })
+            }
+    
+            let docDefinition = {
+                content: content
+            }
+        
+            let pdfDoc = pdfmake.createPdfKitDocument(docDefinition, {});
+            pdfDoc.pipe(fs.createWriteStream('.Factura.pdf'));
+            pdfDoc.end();
+            return res.status(200).send({mensaje: 'pdf Creado y factura guardada'});
+    
+        })
         })
     })
 }
 
-/*Carrito.findOne((err, carritoBuscado)=>{
-    if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
-    if(!carritoBuscado) return res.status(404).send({ mensaje: "Error, ese carrito no existe" });
+function eliminarFactura(req, res){
+    var idFactura = req.params.idFactura;
 
-if(parametros.cantidad < carritoBuscado.cantidadComprada){}
-})*/
+     Factura.findOneAndDelete({_id : idFactura, idCliente : req.user.sub}, (err, facturaEliminada) => {
+        if(err) return res.status(500).send({ mensaje: 'Error en la peticion'});
+        if(!facturaEliminada) return res.status(404).send( { mensaje: 'No puede eliminar facturas de otros clientes'});
+
+        return res.status(200).send({ factura: facturaEliminada});
+    })
+}
+
+function productosVendidos(req, res){
+    
+    Productos.find( { vendido:{$gt :15}}, {nombre:1, vendido:1}, (err, productosEncontrados) => {
+        if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
+        if(!productosEncontrados) return res.status(404).send({ mensaje: "Error, ese empleado no existe o no perteneces a su empresa" });
+
+         Productos.find( { vendido:{$lt :15}}, {nombre:1, vendido:1}, (err, productosEncontradosMenos) => {
+            if(err) return res.status(500).send({ mensaje: "Error en la peticion" });
+            if(!productosEncontradosMenos) return res.status(404).send({ mensaje: "Error, ese empleado no existe o no perteneces a su empresa" });
+     
+            return res.status(200).send({ MasVendidos: productosEncontrados, MenosVendidos: productosEncontradosMenos});
+            
+    })
+ }) 
+}
 
 module.exports = {
     agregarProducto,
@@ -208,5 +277,7 @@ module.exports = {
     agregarCarrito,
     llenarCarrito,
     eliminarCarrito,
-    generarFactura
+    generarFactura,
+    eliminarFactura,
+    productosVendidos
 }

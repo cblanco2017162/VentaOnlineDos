@@ -13,5 +13,8 @@ api.get('/buscarPorNombre/:nombreProducto', [md_autenticacion.Auth, md_roles.var
 api.post('/agregarCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.agregarCarrito);
 api.put('/llenarCarrito/:idCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.llenarCarrito);
 api.put('/generarFactura/:idCarrito', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.generarFactura);
+api.delete('/eliminarCarrito/:idCarrito',[md_autenticacion.Auth, md_roles.varCliente], controladorProductos.eliminarCarrito);
+api.delete('/eliminarFactura/:idFactura', [md_autenticacion.Auth, md_roles.varCliente], controladorProductos.eliminarFactura);
+api.get('/productosVendidos', [md_autenticacion.Auth, md_roles.varAdmin], controladorProductos.productosVendidos);
 
 module.exports = api;
